@@ -10,6 +10,8 @@ const MemoryFileSystem = require('memory-fs');
 const path = require('path');
 const clear = require('clear');
 
+const getConfig = global.requireWithRootDir('../utils/getConfig');
+
 let compiler;
 let webpackStats = null;
 let isBuildInProgress = false;
@@ -17,14 +19,11 @@ let callbacks = [];
 const fs = new MemoryFileSystem();
 
 module.exports = function runWebpackCompiler(
-  requireModule,
-  { HAUL_PLATFORM, HAUL_FILE_OUTPUT, HAUL_OPTIONS },
-  { onError, onLiveReload, onBuilt }
+  { platform, fileOutput, options }: { [key: string]: string },
+  { onError, onLiveReload, onBuilt }: { [key: string]: Function }
 ) {
   function getBundle() {
-    return fs
-      .readFileSync(path.join(process.cwd(), HAUL_FILE_OUTPUT))
-      .toString();
+    return fs.readFileSync(path.join(process.cwd(), fileOutput)).toString();
   }
 
   // If compiler was created but it hasn't finished the build yet,
@@ -40,11 +39,8 @@ module.exports = function runWebpackCompiler(
     callbacks.push(onBuilt);
   }
 
-  const getConfig = requireModule('../utils/getConfig');
-
-  // $FlowFixMe
-  const { configPath, configOptions } = JSON.parse(HAUL_OPTIONS);
-  const config = getConfig(configPath, configOptions, HAUL_PLATFORM);
+  const { configPath, configOptions } = JSON.parse(options);
+  const config = getConfig(configPath, configOptions, platform);
 
   compiler = webpack(config);
   // Set compiler options, set fs to Memory

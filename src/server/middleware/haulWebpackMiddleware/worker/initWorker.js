@@ -5,69 +5,63 @@
  * @flow
  */
 
-const path = require('path');
 const WebSocket = require('ws');
 
+const {
+  REQUEST_BUILD,
+  BUILD_FAILED,
+  BUILD_FINISHED,
+  LIVE_RELOAD,
+} = global.requireWithRootDir('../events');
+const runWebpackCompiler = global.requireWithRootDir('./runWebpackCompiler');
+
 module.exports = function initWorker({
-  HAUL_PLATFORM,
-  HAUL_FILE_OUTPUT,
-  HAUL_OPTIONS,
-  HAUL_DIRECTORY,
-  HAUL_SOCKET_ADDRESS,
+  platform,
+  fileOutput,
+  options,
+  socketAddress,
 }: {
   [key: string]: string,
 }) {
-  function requireModule(moduleId: string) {
-    // $FlowFixMe
-    return require(path.resolve(HAUL_DIRECTORY, 'worker', moduleId));
+  const webSocket = new WebSocket(
+    `ws+unix://${socketAddress}:/?platform=${platform}`
+  );
+
+  function onError(error: Error) {
+    webSocket.send(JSON.stringify({ type: BUILD_FAILED, payload: error }));
   }
 
-  const EVENTS = requireModule('../events');
-  const runWebpackCompiler = require('./runWebpackCompiler');
+  function onBuilt(bundle: string) {
+    webSocket.send(
+      JSON.stringify({
+        type: BUILD_FINISHED,
+        payload: bundle,
+      })
+    );
+  }
 
-  const webSocket = new WebSocket(
-    `ws+unix://${HAUL_SOCKET_ADDRESS}:/?platform=${HAUL_PLATFORM}`
-  );
+  function onLiveReload() {
+    webSocket.send(JSON.stringify({ type: LIVE_RELOAD, payload: null }));
+  }
 
   webSocket.on('message', data => {
     const { type } = JSON.parse(data.toString());
 
-    switch (type) {
-      case EVENTS.REQUEST_BUILD: {
-        runWebpackCompiler(
-          requireModule,
-          {
-            HAUL_PLATFORM,
-            HAUL_FILE_OUTPUT,
-            HAUL_OPTIONS,
-          },
-          {
-            onError(error) {
-              webSocket.send(
-                JSON.stringify({ type: EVENTS.BUILD_FAILED, payload: error })
-              );
-            },
-            onBuilt(bundle) {
-              webSocket.send(
-                JSON.stringify({
-                  type: EVENTS.BUILD_FINISHED,
-                  payload: bundle,
-                })
-              );
-            },
-            onLiveReload() {
-              webSocket.send(
-                JSON.stringify({ type: EVENTS.LIVE_RELOAD, payload: null })
-              );
-            },
-          }
-        );
-        break;
-      }
-      default: {
-        console.log(`Unknown event ${type}`);
-        break;
-      }
+    if (type === REQUEST_BUILD) {
+      runWebpackCompiler(
+        {
+          platform,
+          fileOutput,
+          options,
+        },
+        {
+          onError,
+          onBuilt,
+          onLiveReload,
+        }
+      );
+    } else {
+      console.log(`Unknown event ${type}`);
     }
   });
 };

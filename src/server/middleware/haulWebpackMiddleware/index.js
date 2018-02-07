@@ -6,6 +6,7 @@
  */
 /* eslint-disable consistent-return */
 
+import type { $Response } from 'express';
 import type { Platform } from './types';
 
 const createWebSocketServer = require('./createWebSocketServer');
@@ -32,19 +33,12 @@ type Request = {
   path: string,
 };
 
-type Response = {
-  writeHead: Function,
-  end: Function,
-  type: Function,
-  status: Function,
-};
-
 module.exports = function createHaulWebpackMiddleware(
   options: MiddlewareOptions
 ) {
   return function haulWebpackMiddleware(
     req: Request,
-    res: Response,
+    res: $Response,
     next: Function
   ) {
     const { expressContext, ...forkOptions } = options;

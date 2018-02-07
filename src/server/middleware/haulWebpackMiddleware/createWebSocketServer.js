@@ -10,6 +10,9 @@ const http = require('http');
 const { Server } = require('ws');
 const fs = require('fs');
 
+/**
+ * Create WebSocket server using HTTP server over Unix socket.
+ */
 module.exports = function createWebSocketServer() {
   const socketAddress = xpipe.eq(`/tmp/HAUL_SOCKET_.socket`);
 

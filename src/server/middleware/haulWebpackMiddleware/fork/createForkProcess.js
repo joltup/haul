@@ -32,22 +32,17 @@ module.exports = function createForkProcess(
   options: Options
 ) {
   const workerPath = path.resolve(rootDir, 'worker/index.js');
-  const child = spawn(
-    process.execPath,
-    // ['--inspect=127.0.0.1:9225', webpackWorkerPath], // debugging
-    [workerPath],
-    {
-      cwd,
-      env: {
-        HAUL_PLATFORM: platform,
-        HAUL_FILE_OUTPUT: fileOutput,
-        HAUL_DIRECTORY: rootDir,
-        HAUL_OPTIONS: JSON.stringify(options),
-        HAUL_SOCKET_ADDRESS: address,
-      },
-      stdio: [0, 1, 2, 'ipc', 'pipe'], // @TODO: remove unnecessary comms
-    }
-  );
+  const child = spawn(process.execPath, [workerPath], {
+    cwd,
+    env: {
+      HAUL_PLATFORM: platform,
+      HAUL_FILE_OUTPUT: fileOutput,
+      HAUL_DIRECTORY: rootDir,
+      HAUL_OPTIONS: JSON.stringify(options),
+      HAUL_SOCKET_ADDRESS: address,
+    },
+    stdio: [0, 1, 2, 'ipc', 'pipe'], // @TODO: remove unnecessary comms
+  });
 
   child.on('error', error => {
     throw error;

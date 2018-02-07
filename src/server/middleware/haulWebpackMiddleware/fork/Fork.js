@@ -26,6 +26,9 @@ type ForkConstructorArgs = {
 const forksCache = {};
 
 module.exports = class Fork {
+  /**
+   * Get fork instance from cache or create a new one.
+   */
   static getFork(forkConstructorArgs: ForkConstructorArgs) {
     if (!forksCache[forkConstructorArgs.platform]) {
       forksCache[forkConstructorArgs.platform] = new Fork(forkConstructorArgs);
@@ -40,6 +43,12 @@ module.exports = class Fork {
     });
   }
 
+  /**
+   * Set WebSocket associated with specific fork.
+   * This function needs to be called externally, since the connection
+   * will be initialized after fork is created, so the socket will be available
+   * later.
+   */
   static setSocket(platform: Platform, socket: WebSocket) {
     const fork = forksCache[platform];
 
@@ -78,8 +87,9 @@ module.exports = class Fork {
   initSocket(socket: WebSocket) {
     this.socket = socket;
 
-    this.socket.addEventListener('message', evt => {
-      const { type, payload } = JSON.parse(evt.data.toString());
+    // $FlowFixMe
+    this.socket.addEventListener('message', ({ data }) => {
+      const { type, payload } = JSON.parse(data.toString());
 
       this.listeners
         .filter(listener => listener.type === type)

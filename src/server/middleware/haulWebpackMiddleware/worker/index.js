@@ -28,13 +28,17 @@ if (
   throw new Error('Unable to create worker due to missing env variables');
 }
 
+global.requireWithRootDir = function requireWithRootDir(moduleId) {
+  // $FlowFixMe
+  return require(path.resolve(HAUL_DIRECTORY, 'worker', moduleId));
+};
+
 // $FlowFixMe
-require(path.join(HAUL_DIRECTORY, '../../../babelRegister'));
+global.requireWithRootDir(path.join(HAUL_DIRECTORY, '../../../babelRegister'));
 // $FlowFixMe
-require(path.join(HAUL_DIRECTORY, './worker/initWorker'))({
-  HAUL_PLATFORM,
-  HAUL_FILE_OUTPUT,
-  HAUL_OPTIONS,
-  HAUL_DIRECTORY,
-  HAUL_SOCKET_ADDRESS,
+global.requireWithRootDir(path.join(HAUL_DIRECTORY, './worker/initWorker'))({
+  platform: HAUL_PLATFORM,
+  fileOutput: HAUL_FILE_OUTPUT,
+  options: HAUL_OPTIONS,
+  socketAddress: HAUL_SOCKET_ADDRESS,
 });
