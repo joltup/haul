@@ -14,23 +14,47 @@ import {
 
 test('creates config from defaults', () => {
   const webpackConfig = require('./fixtures/webpack.config.js');
-  const [configs, platforms] = makeReactNativeConfig(webpackConfig, {
-    dev: true,
-    root: path.resolve(__dirname, 'fixtures'),
-  });
+  const iosConfig = makeReactNativeConfig(
+    webpackConfig,
+    {
+      dev: true,
+      root: path.resolve(__dirname, 'fixtures'),
+    },
+    'ios'
+  );
 
-  expect(replacePathsInObject(configs)).toMatchSnapshot('(configs)');
-  expect(platforms).toMatchSnapshot('(platforms)');
+  expect(replacePathsInObject(iosConfig)).toMatchSnapshot(
+    'creates config from defaults (configs)'
+  );
+
+  const androidConfig = makeReactNativeConfig(
+    webpackConfig,
+    {
+      dev: true,
+      root: path.resolve(__dirname, 'fixtures'),
+    },
+    'android'
+  );
+
+  expect(replacePathsInObject(androidConfig)).toMatchSnapshot(
+    'creates config from defaults (configs)'
+  );
 });
 
 test('merges existing config', () => {
   const webpackConfig = require('./fixtures/webpack.custom.config.js');
-  const [configs] = makeReactNativeConfig(webpackConfig, {
-    dev: true,
-    root: path.resolve(__dirname, 'fixtures'),
-  });
+  const config = makeReactNativeConfig(
+    webpackConfig,
+    {
+      dev: true,
+      root: path.resolve(__dirname, 'fixtures'),
+    },
+    'ios'
+  );
 
-  expect(replacePathsInObject(configs)).toMatchSnapshot();
+  expect(replacePathsInObject(config)).toMatchSnapshot(
+    'merges existing config'
+  );
 });
 
 describe('injects polyfill into different entries', () => {

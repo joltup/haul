@@ -6,7 +6,7 @@
 /**
  * Live reload middleware
  */
-function liveReloadMiddleware(compiler) {
+function liveReloadMiddleware(expressContext) {
   let watchers = [];
   const headers = {
     'Content-Type': 'application/json; charset=UTF-8',
@@ -21,11 +21,16 @@ function liveReloadMiddleware(compiler) {
     watchers = [];
   }
 
+  // pass live reload to forks' parent
+  /* eslint-disable no-param-reassign */
+  expressContext.liveReload = notifyAllWatchers;
+
   return (req, res, next) => {
     /**
      * React Native client opens connection at `/onchange`
      * and awaits reload signal (http status code - 205)
      */
+
     if (req.path === '/onchange') {
       const watcher = { req, res };
 
@@ -43,13 +48,6 @@ function liveReloadMiddleware(compiler) {
       res.end();
       return;
     }
-
-    /**
-     * On new `build`, notify all registered watchers to reload
-     */
-    compiler.plugin('done', () => {
-      notifyAllWatchers();
-    });
 
     next();
   };
