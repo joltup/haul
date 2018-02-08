@@ -23,9 +23,7 @@ test('creates config from defaults', () => {
     'ios'
   );
 
-  expect(replacePathsInObject(iosConfig)).toMatchSnapshot(
-    'creates config from defaults (configs)'
-  );
+  expect(replacePathsInObject(iosConfig)).toMatchSnapshot('ios config');
 
   const androidConfig = makeReactNativeConfig(
     webpackConfig,
@@ -36,9 +34,7 @@ test('creates config from defaults', () => {
     'android'
   );
 
-  expect(replacePathsInObject(androidConfig)).toMatchSnapshot(
-    'creates config from defaults (configs)'
-  );
+  expect(replacePathsInObject(androidConfig)).toMatchSnapshot('android config');
 });
 
 test('merges existing config', () => {
@@ -52,9 +48,7 @@ test('merges existing config', () => {
     'ios'
   );
 
-  expect(replacePathsInObject(config)).toMatchSnapshot(
-    'merges existing config'
-  );
+  expect(replacePathsInObject(config)).toMatchSnapshot();
 });
 
 describe('injects polyfill into different entries', () => {
