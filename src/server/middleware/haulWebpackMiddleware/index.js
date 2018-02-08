@@ -109,3 +109,7 @@ process.on('uncaughtException', err => {
 process.on('SIGINT', () => {
   killAndExit();
 });
+
+process.on('SIGTERM', () => {
+  killAndExit();
+});

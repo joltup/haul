@@ -33,9 +33,7 @@ global.requireWithRootDir = function requireWithRootDir(moduleId) {
   return require(path.resolve(HAUL_DIRECTORY, 'worker', moduleId));
 };
 
-// $FlowFixMe
 global.requireWithRootDir(path.join(HAUL_DIRECTORY, '../../../babelRegister'));
-// $FlowFixMe
 global.requireWithRootDir(path.join(HAUL_DIRECTORY, './worker/initWorker'))({
   platform: HAUL_PLATFORM,
   fileOutput: HAUL_FILE_OUTPUT,
