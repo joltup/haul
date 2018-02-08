@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`creates config from defaults (configs) 1`] = `
+exports[`creates config from defaults: creates config from defaults (configs) 1`] = `
 Object {
   "context": "<<REPLACED>>/utils/__tests__/fixtures",
   "entry": Array [
@@ -124,7 +124,7 @@ Object {
 }
 `;
 
-exports[`creates config from defaults (configs) 2`] = `
+exports[`creates config from defaults: creates config from defaults (configs) 2`] = `
 Object {
   "context": "<<REPLACED>>/utils/__tests__/fixtures",
   "entry": Array [
@@ -248,7 +248,7 @@ Object {
 }
 `;
 
-exports[`merges existing config 1`] = `
+exports[`merges existing config: merges existing config 1`] = `
 Object {
   "context": "<<REPLACED>>/utils/__tests__/fixtures",
   "entry": Array [
