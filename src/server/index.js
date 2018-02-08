@@ -13,7 +13,7 @@ const path = require('path');
  * Custom made middlewares
  */
 
-// const hotMiddleware = require('./middleware/hotMiddleware');
+const hotMiddleware = require('./middleware/hotMiddleware');
 const devToolsMiddleware = require('./middleware/devToolsMiddleware');
 const liveReloadMiddleware = require('./middleware/liveReloadMiddleware');
 const statusPageMiddleware = require('./middleware/statusPageMiddleware');
@@ -64,7 +64,10 @@ function createServer(config: { configPath: string, configOptions: Object }) {
     liveReload: () => {},
   };
   const { configPath, configOptions } = config;
-  const webpackMiddleware = createHaulWebpackMiddleware({
+  const {
+    middleware: webpackMiddleware,
+    compiler,
+  } = createHaulWebpackMiddleware({
     configPath,
     configOptions,
     expressContext,
@@ -77,11 +80,10 @@ function createServer(config: { configPath: string, configOptions: Object }) {
     webSocketProxy(webSocketServer, '/debugger-proxy')
   );
 
-  // disable for now
-  // hotMiddleware(compiler, {
-  //   nativeProxy: webSocketProxy(webSocketServer, '/hot'),
-  //   haulProxy: webSocketProxy(webSocketServer, '/haul-hmr'),
-  // });
+  hotMiddleware(compiler, {
+    nativeProxy: webSocketProxy(webSocketServer, '/hot'),
+    haulProxy: webSocketProxy(webSocketServer, '/haul-hmr'),
+  });
 
   // Middlewares
   appHandler

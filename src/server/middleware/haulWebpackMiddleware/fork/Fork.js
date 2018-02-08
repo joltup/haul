@@ -7,6 +7,7 @@
 
 import type { Platform } from '../types';
 
+const EventEmitter = require('events');
 const createForkProcess = require('./createForkProcess');
 
 const {
@@ -14,6 +15,8 @@ const {
   BUILD_FINISHED,
   LIVE_RELOAD,
   BUILD_FAILED,
+  REQUEST_FILE,
+  FILE_RECEIVED,
 } = require('../events.js');
 
 type ForkConstructorArgs = {
@@ -21,6 +24,7 @@ type ForkConstructorArgs = {
   server: any,
   rootDir: string,
   options: *,
+  compilerEventsTransport: EventEmitter,
 };
 
 const forksCache = {};
@@ -59,12 +63,29 @@ module.exports = class Fork {
     fork.initSocket(socket);
   }
 
+  static requestFile(url: string, callback: Function) {
+    Object.keys(forksCache).forEach(platform => {
+      forksCache[platform].onFileReceived(callback);
+      forksCache[platform].requestFile(url);
+    });
+  }
+
   process: any;
   socket: WebSocket;
   listeners: { type: string, callback: Function }[];
   awaitingConnection: boolean;
+  compilerEventsTransport: EventEmitter;
+  platform: string;
 
-  constructor({ platform, server, rootDir, options }: ForkConstructorArgs) {
+  constructor({
+    platform,
+    server,
+    rootDir,
+    options,
+    compilerEventsTransport,
+  }: ForkConstructorArgs) {
+    this.platform = platform;
+    this.compilerEventsTransport = compilerEventsTransport;
     this.listeners = [];
     this.awaitingConnection = false;
     this.process = createForkProcess(
@@ -91,6 +112,11 @@ module.exports = class Fork {
     this.socket.addEventListener('message', ({ data }) => {
       const { type, payload } = JSON.parse(data.toString());
 
+      this.compilerEventsTransport.emit(type, {
+        platform: this.platform,
+        payload,
+      });
+
       this.listeners
         .filter(listener => listener.type === type)
         .forEach(listener => listener.callback(payload));
@@ -114,6 +140,10 @@ module.exports = class Fork {
     this.socket.send(JSON.stringify({ type: REQUEST_BUILD }));
   }
 
+  requestFile(url: string) {
+    this.socket.send(JSON.stringify({ type: REQUEST_FILE, url }));
+  }
+
   onError(listener: Function) {
     this.listeners.push({ type: BUILD_FAILED, callback: listener });
   }
@@ -124,5 +154,12 @@ module.exports = class Fork {
 
   onLiveReload(listener: Function) {
     this.listeners.push({ type: LIVE_RELOAD, callback: listener });
+  }
+
+  onFileReceived(listener: Function) {
+    this.listeners.push({
+      type: FILE_RECEIVED,
+      callback: listener,
+    });
   }
 };

@@ -6,11 +6,8 @@
  * global WebSocket
  */
 
+const EventEmitter = require('events');
 const { Observable } = require('rxjs/Rx');
-
-type Compiler = {
-  plugin: (name: string, fn: Function) => void,
-};
 
 type WebSocketProxy = {
   onConnection: (hanlder: Function) => void,
@@ -35,7 +32,7 @@ type Logger = {
  *   and process actuall update
  */
 function hotMiddleware(
-  compiler: Compiler,
+  compiler: EventEmitter,
   {
     nativeProxy,
     haulProxy,
@@ -59,6 +56,9 @@ function hotMiddleware(
   const haulConnections$ = createConnectionStream(haulProxy, 'haul');
 
   compilerEvent$
+    .do(value => {
+      console.log(value.body.type || value.body.action);
+    })
     .withLatestFrom(
       nativeConnections$.do(createLog('Native client connected')),
       mergeCompilerEventWithConnection
@@ -118,9 +118,10 @@ function createConnectionStream(wsProxy: WebSocketProxy, id: string) {
     .map(sockets => ({ [id]: sockets }));
 }
 
-function createCompilerEventStream(compiler: Compiler) {
+function createCompilerEventStream(compiler: EventEmitter) {
   return Observable.create((observer: *) => {
-    compiler.plugin('invalid', () => {
+    // $FlowFixMe
+    compiler.on(compiler.events.BUILD_START, () => {
       observer.next({
         target: 'native',
         platform: 'all',
@@ -133,20 +134,24 @@ function createCompilerEventStream(compiler: Compiler) {
       });
     });
 
-    compiler.plugin('done', (stats: Object) => {
-      observer.next({
-        target: 'native',
-        platform: 'all',
-        body: { type: 'update-done' },
-      });
-      getStatsPayload(stats).forEach(payload => {
+    compiler.on(
+      // $FlowFixMe
+      compiler.events.BUILD_FINISHED,
+      ({ platform, payload: { stats } }) => {
         observer.next({
-          target: 'haul',
-          platform: payload.name || 'all',
-          body: { action: 'built', ...payload },
+          target: 'native',
+          platform: 'all',
+          body: { type: 'update-done' },
         });
-      });
-    });
+        getStatsPayload(stats).forEach(payload => {
+          observer.next({
+            target: 'haul',
+            platform: platform || 'all',
+            body: { action: 'built', ...payload },
+          });
+        });
+      }
+    );
   });
 }
 
@@ -162,7 +167,7 @@ function mergeCompilerEventWithConnection(
 
 function getStatsPayload(stats: Object) {
   // For multi-compiler, stats will be an object with a 'children' array of stats
-  const bundles = extractBundles(stats.toJson({ errorDetails: false }));
+  const bundles = extractBundles(stats);
   return bundles.map(bundleStats => {
     return {
       name: bundleStats.name,

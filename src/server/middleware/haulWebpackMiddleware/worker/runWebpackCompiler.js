@@ -6,21 +6,19 @@
  */
 
 const webpack = require('webpack');
-const MemoryFileSystem = require('memory-fs');
 const path = require('path');
-const clear = require('clear');
+// const clear = require('clear');
 
 const getConfig = global.requireWithRootDir('../utils/getConfig');
 
 let compiler;
 let webpackStats = null;
 let isBuildInProgress = false;
-let callbacks = [];
-const fs = new MemoryFileSystem();
+const callbacks = [];
 
 module.exports = function runWebpackCompiler(
-  { platform, fileOutput, options }: { [key: string]: string },
-  { onError, onLiveReload, onBuilt }: { [key: string]: Function }
+  { platform, fileOutput, options, fs }: { [key: string]: string, fs: Object },
+  { onError, onLiveReload, onCompile, onBuilt }: { [key: string]: Function }
 ) {
   function getBundle() {
     return fs.readFileSync(path.join(process.cwd(), fileOutput)).toString();
@@ -50,12 +48,12 @@ module.exports = function runWebpackCompiler(
     isBuildInProgress = false;
     webpackStats = stats;
 
-    clear();
+    // clear();
 
     process.nextTick(() => {
       if (isBuildInProgress) return;
       callbacks.forEach(callback => callback(getBundle(), webpackStats));
-      callbacks = [];
+      // callbacks = [];
       if (typeof onLiveReload === 'function') {
         onLiveReload();
       }
@@ -72,7 +70,10 @@ module.exports = function runWebpackCompiler(
     }
   }
 
-  compiler.plugin('invalid', compilerInvalid);
+  compiler.plugin('invalid', (...args) => {
+    compilerInvalid(...args);
+    onCompile();
+  });
   compiler.plugin('watch-run', compilerInvalid);
   compiler.plugin('run', compilerInvalid);
 
