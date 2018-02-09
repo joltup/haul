@@ -18,21 +18,7 @@ type ForkConstructorArgs = {
 };
 
 const forks = {};
-
-const transportServer = createWebSocketServer();
-
-/**
- * WebSocket connection is established after the Fork is created.
- */
-transportServer.on('connection', socket => {
-  const platformMatch = socket.upgradeReq.url.match(/platform=(ios|android)/);
-
-  if (!platformMatch) {
-    throw new Error('Incorrect platform');
-  }
-
-  forks[platformMatch[1]].setSocket(socket);
-});
+let transportServer;
 
 module.exports = class Fork extends EventEmitter {
   platform: Platform;
@@ -43,6 +29,25 @@ module.exports = class Fork extends EventEmitter {
 
   constructor({ platform, options }: ForkConstructorArgs) {
     super();
+
+    if (!transportServer) {
+      transportServer = createWebSocketServer();
+
+      /**
+       * WebSocket connection is established after the Fork is created.
+       */
+      transportServer.on('connection', socket => {
+        const platformMatch = socket.upgradeReq.url.match(
+          /platform=(ios|android)/
+        );
+
+        if (!platformMatch) {
+          throw new Error('Incorrect platform');
+        }
+
+        forks[platformMatch[1]].setSocket(socket);
+      });
+    }
 
     this.isProcessing = true;
     this.enqueuedMessages = [];
