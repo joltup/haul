@@ -12,7 +12,6 @@ const path = require('path');
  */
 const {
   HAUL_PLATFORM,
-  HAUL_FILE_OUTPUT,
   HAUL_OPTIONS,
   HAUL_DIRECTORY,
   HAUL_SOCKET_ADDRESS,
@@ -20,7 +19,6 @@ const {
 
 if (
   !HAUL_PLATFORM ||
-  !HAUL_FILE_OUTPUT ||
   !HAUL_OPTIONS ||
   !HAUL_DIRECTORY ||
   !HAUL_SOCKET_ADDRESS
@@ -30,13 +28,12 @@ if (
 
 global.requireWithRootDir = function requireWithRootDir(moduleId) {
   // $FlowFixMe
-  return require(path.resolve(HAUL_DIRECTORY, 'worker', moduleId));
+  return require(path.resolve(HAUL_DIRECTORY, moduleId));
 };
 
-global.requireWithRootDir(path.join(HAUL_DIRECTORY, '../../../babelRegister'));
-global.requireWithRootDir(path.join(HAUL_DIRECTORY, './worker/initWorker'))({
+global.requireWithRootDir(path.join(HAUL_DIRECTORY, '../../babelRegister'));
+global.requireWithRootDir(path.join(HAUL_DIRECTORY, './initWorker'))({
   platform: HAUL_PLATFORM,
-  fileOutput: HAUL_FILE_OUTPUT,
   options: HAUL_OPTIONS,
   socketAddress: HAUL_SOCKET_ADDRESS,
 });

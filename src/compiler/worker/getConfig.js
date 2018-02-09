@@ -5,11 +5,9 @@
  * @flow
  */
 
-import type { Platform } from '../types';
+import type { Platform } from '../../types';
 
-const {
-  makeReactNativeConfig,
-} = require('../../../../utils/makeReactNativeConfig');
+const { makeReactNativeConfig } = require('../../utils/makeReactNativeConfig');
 
 module.exports = function getConfig(
   configPath: string,

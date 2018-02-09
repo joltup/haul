@@ -5,7 +5,7 @@
  * @flow
  */
 
-import type { Platform } from '../types';
+import type { Platform } from '../../types';
 
 module.exports = function getRequestDataFromPath(path: string) {
   const fileRegExp = /\w+\.(ios|android)\.bundle/i;

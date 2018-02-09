@@ -57,7 +57,7 @@ function hotMiddleware(
 
   compilerEvent$
     .do(value => {
-      console.log(value.body.type || value.body.action);
+      console.log('got event', value);
     })
     .withLatestFrom(
       nativeConnections$.do(createLog('Native client connected')),
@@ -137,7 +137,7 @@ function createCompilerEventStream(compiler: EventEmitter) {
     compiler.on(
       // $FlowFixMe
       compiler.events.BUILD_FINISHED,
-      ({ platform, payload: { stats } }) => {
+      ({ platform, stats }) => {
         observer.next({
           target: 'native',
           platform: 'all',

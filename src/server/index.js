@@ -8,11 +8,15 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const clear = require('clear');
+
+const Compiler = require('../compiler/Compiler');
 
 /**
  * Custom made middlewares
  */
 
+const createCompilerMiddleware = require('./middleware/compilerMiddleware.js');
 const hotMiddleware = require('./middleware/hotMiddleware');
 const devToolsMiddleware = require('./middleware/devToolsMiddleware');
 const liveReloadMiddleware = require('./middleware/liveReloadMiddleware');
@@ -24,7 +28,6 @@ const missingBundleMiddleware = require('./middleware/missingBundleMiddleware');
 const systraceMiddleware = require('./middleware/systraceMiddleware');
 const rawBodyMiddleware = require('./middleware/rawBodyMiddleware');
 const requestChangeMiddleware = require('./middleware/requestChangeMiddleware');
-const createHaulWebpackMiddleware = require('./middleware/haulWebpackMiddleware');
 
 const WebSocketServer = require('ws').Server;
 
@@ -64,10 +67,28 @@ function createServer(config: { configPath: string, configOptions: Object }) {
     liveReload: () => {},
   };
   const { configPath, configOptions } = config;
-  const {
-    middleware: webpackMiddleware,
-    compiler,
-  } = createHaulWebpackMiddleware({
+
+  const compiler = new Compiler({
+    configPath,
+    configOptions,
+  });
+  compiler.on(Compiler.Events.BUILD_FINISHED, () => {
+    clear();
+    expressContext.liveReload();
+  });
+  process.on('uncaughtException', err => {
+    compiler.terminate(err);
+  });
+
+  process.on('SIGINT', () => {
+    compiler.terminate();
+  });
+
+  process.on('SIGTERM', () => {
+    compiler.terminate();
+  });
+
+  const compilerMiddleware = createCompilerMiddleware(compiler, {
     configPath,
     configOptions,
     expressContext,
@@ -97,7 +118,7 @@ function createServer(config: { configPath: string, configOptions: Object }) {
     .use('/systrace', systraceMiddleware)
     .use(loggerMiddleware)
     .use(requestChangeMiddleware)
-    .use(webpackMiddleware)
+    .use(compilerMiddleware)
     .use(missingBundleMiddleware);
 
   return httpServer;

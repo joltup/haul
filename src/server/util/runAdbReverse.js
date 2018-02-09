@@ -8,8 +8,8 @@
 const { exec } = require('child_process');
 const clear = require('clear');
 
-const logger = require('../../../../logger');
-const messages = require('../../../../messages');
+const logger = require('../../logger');
+const messages = require('../../messages');
 
 module.exports = function runAdbReverse(port: number) {
   const command = `adb reverse tcp:${port} tcp:${port}`;
