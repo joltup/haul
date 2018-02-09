@@ -5,6 +5,8 @@
  * @flow
  */
 
+import type { Platform } from '../types';
+
 const EventEmitter = require('events');
 const Events = require('./events');
 const Fork = require('./Fork');
@@ -61,7 +63,7 @@ module.exports = class Compiler extends EventEmitter {
     });
   }
 
-  initFork({ platform, options }) {
+  initFork({ platform, options }: { platform: Platform, options: * }) {
     const fork = new Fork({ platform, options });
 
     fork.on(Events.FILE_RECEIVED, ({ file, taskId }) => {
